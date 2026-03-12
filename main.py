@@ -7,9 +7,9 @@ import webbrowser
 import pandas as pd
 import pdfplumber
 
-PERMITE_ABRIR_TASK = False
-PERMITE_ABRIR_PBI = False
-PERMITE_ABRIR_REDMINE = False
+PERMITE_ABRIR_TASK = True
+PERMITE_ABRIR_PBI = True
+PERMITE_ABRIR_REDMINE = True
 
 PERGUNTA_ABRIR_TASK = "Deseja abrir as Tasks? (s/n)"
 PERGUNTA_ABRIR_PBI = "Deseja abrir os PBIs? (s/n)"
@@ -89,10 +89,10 @@ def read_and_filter_dedoduro(file_path: Path) -> pd.DataFrame:
     df.rename(columns={df.columns[12]: "BIP_Perc"}, inplace=True)
 
     filtered = df[df["Setor"] == TARGET_SETOR]
-    filtered = filtered[((filtered["Normais_Perc"].notna()) & ((filtered["Normais_Perc"] < LIMITE_MIN_DEDODURO) | (filtered["Normais_Perc"] > LIMITE_MAX_DEDODURO))) 
-                        | ((filtered["Extras_Perc"].notna()) & ((filtered["Extras_Perc"] < LIMITE_MIN_DEDODURO) | (filtered["Extras_Perc"] > LIMITE_MAX_DEDODURO))) 
-                        | ((filtered["BIP_Perc"].notna()) & ((filtered["BIP_Perc"] < LIMITE_MIN_DEDODURO) | (filtered["BIP_Perc"] > LIMITE_MAX_DEDODURO)))]
-
+    filtered = filtered[((filtered["Normais_Perc"].notna()) & ((filtered["Normais_Perc"] <= LIMITE_MIN_DEDODURO) | (filtered["Normais_Perc"] >= LIMITE_MAX_DEDODURO)))
+        | ((filtered["Extras_Perc"].notna()) & ((filtered["Extras_Perc"] <= LIMITE_MIN_DEDODURO) | (filtered["Extras_Perc"] >= LIMITE_MAX_DEDODURO))) 
+        | ((filtered["BIP_Perc"].notna()) & ((filtered["BIP_Perc"] <= LIMITE_MIN_DEDODURO) | (filtered["BIP_Perc"] >= LIMITE_MAX_DEDODURO)))]
+    
     filtered["Normais_PES"] = filtered["Normais_PES"].round(2)
     filtered["Normais_RPM"] = filtered["Normais_RPM"].round(2)
     filtered["Normais_Perc"] = filtered["Normais_Perc"].round(2)

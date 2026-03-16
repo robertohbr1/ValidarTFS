@@ -10,12 +10,14 @@ import pdfplumber
 PERMITE_ABRIR_TASK = True
 PERMITE_ABRIR_PBI = True
 PERMITE_ABRIR_REDMINE = True
+PERMITE_ABRIR_EPICOS = True
 
 PERGUNTA_ABRIR_TASK = "Deseja abrir as Tasks? (s/n)"
 PERGUNTA_ABRIR_PBI = "Deseja abrir os PBIs? (s/n)"
 PERGUNTA_ABRIR_REDMINE = "Deseja abrir os Redmines? (s/n)"
+PERGUNTA_ABRIR_EPICOS = "Deseja abrir os Épicos? (s/n)"
 
-TARGET_SETOR = "AR1"
+TARGET_SETOR = "AR5"
 
 NETWORK_DIR = r"\\profs01\documentos\PROCERGS\Relatorios_PPR"
 NETWORK_DIR_DEDODURO = r"\Apropriação de Horas"
@@ -33,11 +35,11 @@ TARGET_APROVADO_ENTREGAVEIS = "PENDENTE"
 NETWORK_DIR_ITAD = r"\ITAD"
 FILE_PATTERN_ITAD = "Previa_ITAD*.xlsx"
 SHEET_NAME_ITAD = "Não Conformidades"
-TARGET_ITAD = "DFR.AR1"
+TARGET_ITAD = "DFR." + TARGET_SETOR
 
 NETWORK_DIR_RPM = r"\Validacao_RPM"
 FILE_PATTERN_RPM = "InconsistenciasRPM_Setores.pdf"
-TARGET_RPM = "AR1"
+TARGET_RPM = TARGET_SETOR
 
 def find_file_more_recent(directory: str, pattern: str) -> Path | None:
     """Recursively search for files matching ``pattern`` under ``directory``.
@@ -143,6 +145,16 @@ def read_and_filter_PreviaEntregaveis(file_path: Path, sheet_name: str, tipo: st
     filtered = filtered.drop(columns=["IAP"], errors='ignore')
     return filtered
 
+def buscaPBIouTask(itens: set, mensagem: str, buscaPor: str) -> list[str]:
+    match = re.search(rf'{buscaPor}\s*(.+?)\.', mensagem)
+    if match:
+        pbis_str = match.group(1).split('.')[0]  # pega a parte antes do próximo ponto, caso haja
+        pbis = [p.strip() for p in pbis_str.split(',')]
+        for pbi in pbis:
+            if pbi.startswith('#'):
+                num = pbi[1:].strip()
+                itens.add(num)
+
 def Show_PreviaEntregaveis():
     excel_file = find_file_more_recent(NETWORK_DIR + NETWORK_DIR_ENTREGAVEIS, FILE_PATTERN_ENTREGAVEIS)
     if excel_file is None:
@@ -150,6 +162,10 @@ def Show_PreviaEntregaveis():
         return
 
     print(f"Abrindo {excel_file}")
+
+    retEpico = set()
+    retPBIouTask = set()
+    retTask = set()
 
     for sheet in [SHEET_NAME_ENTREGAVEIS_1, SHEET_NAME_ENTREGAVEIS_2]:
         for tipo in ['Válidos e Pendentes', 'Inválidos']:
@@ -165,10 +181,31 @@ def Show_PreviaEntregaveis():
                 print(f"Encontrados {len(result)} registros:")
                 # display rows as a table with column names, one record per line
                 print(result.to_string(index=False))
+                retEpico.update(result["ID"].tolist())
                 if tipo == 'Válidos e Pendentes':
                     print(f"Verifique os dados acima. Os Épicos com status 'PENDENTE' estão aguardando aprovação.")
                     print(f"==> A correção provável é solicitar, no próprio Épico, a aprovação da Chefia, que deve ser citada com @nome.")
 
+                motivo = result["Motivo"].tolist()
+                for m in motivo:
+                    buscaPBIouTask(retPBIouTask, m, "Épico com filhos não concluídos:")
+                    buscaPBIouTask(retTask, m, "Tasks sem effort work:")
+
+
+    if retEpico:
+        print(f"Épicos com erro: {retEpico}")
+        if perguntaAbrirEpicos() == 's':
+            abreSite(retEpico)
+    
+    retPBIouTask = retPBIouTask - retTask
+    if retPBIouTask:
+        print(f"PBIs não concluídos: {retPBIouTask}")
+        if perguntaAbrirPBI() == 's':
+            abreSite(retPBIouTask)
+    if retTask:
+        print(f"Tasks sem effort work: {retTask}")
+        if perguntaAbrirTask() == 's':
+            abreSite(retTask)
 
 def read_and_filter_ITAD(file_path: Path) -> pd.DataFrame:
     if not file_path.exists():
@@ -212,6 +249,7 @@ def Show_ITAD():
     else:
         # Cria variável como SET para evitar duplicidade de Redmine, e lista para os demais casos
         retRedmine = set()
+        retEpico = set()
         retPBI_RedmineErro = set()
         retPBI_RedmineVazio = set()
         retPBI_MultiRef = set()
@@ -221,6 +259,11 @@ def Show_ITAD():
             if "Task sem esforço" in line.Mensagem:
                 retTask.add(f"{(line.Mensagem[1:8])}")
             elif "Demanda em situação de Rascunho" in line.Mensagem:
+                #busca o número do Épico, considerando que o formato é "[WorkItemId=12345]"
+                match = re.search(r'\[WorkItemId=(\d+)\]', line.Mensagem)
+                if match:
+                    retEpico.add(match.group(1))
+
                 #busca o número do Redmine, considerando que o formato é "[DemandaId=12345]"                
                 match = re.search(r'\[DemandaId=(\d+)\]', line.Mensagem)
                 if match:
@@ -238,6 +281,7 @@ def Show_ITAD():
             print(f"Redmine ainda definido com Rascunho: {retRedmine}")
             if perguntaAbrirRedmine() == 's':
                 abreRedmine(retRedmine)
+                abreSite(retEpico)
         if retPBI_RedmineErro:
             print(f"PBIs com erro na busca no Redmine: {retPBI_RedmineErro}")
             if perguntaAbrirPBI() == 's':
@@ -263,6 +307,11 @@ def perguntaAbrirTask():
     if not PERMITE_ABRIR_TASK:
         return 'n'
     return input(PERGUNTA_ABRIR_TASK).lower()
+
+def perguntaAbrirEpicos():
+    if not PERMITE_ABRIR_EPICOS:
+        return 'n'
+    return input(PERGUNTA_ABRIR_EPICOS).lower()
 
 def perguntaAbrirPBI():
     if not PERMITE_ABRIR_PBI:

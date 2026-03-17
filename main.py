@@ -10,11 +10,6 @@ import requests
 import pandas as pd
 import pdfplumber
 
-PERMITE_ABRIR_TASK = True
-PERMITE_ABRIR_PBI = True
-PERMITE_ABRIR_REDMINE = True
-PERMITE_ABRIR_EPICOS = True
-
 targetSetor = "AR1"
 
 NETWORK_DIR = r"\\profs01\documentos\PROCERGS\Relatorios_PPR"

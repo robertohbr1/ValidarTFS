@@ -45,7 +45,8 @@ def find_file_more_recent(directory: str, pattern: str) -> Path | None:
     """
     root = Path(directory)
     if not root.exists():
-        return None
+        printGrava(f"Diretório não existe: {directory}")
+        sys.exit(1)
 
     candidates: list[Path] = []
     # use rglob to recursively search; pattern may include wildcards
@@ -54,7 +55,8 @@ def find_file_more_recent(directory: str, pattern: str) -> Path | None:
             candidates.append(path)
 
     if not candidates:
-        return None
+        printGrava(f"Nenhum arquivo encontrado com {pattern} em {directory}")
+        sys.exit(1)
 
     # pick the newest modified file
     newest = max(candidates, key=lambda p: p.stat().st_mtime)
@@ -107,12 +109,7 @@ def printGrava(texto: str, modo: str = "a"):
     with open(f"{targetSetor}.txt", modo, encoding="utf-8") as f:
         f.write(texto + "\n")
 
-def Show_DedoDuro():
-    excel_file = find_file_more_recent(NETWORK_DIR + NETWORK_DIR_DEDODURO, FILE_PATTERN_DEDODURO)
-    if excel_file is None:
-        printGrava(f"No file matching {FILE_PATTERN_DEDODURO} found in {NETWORK_DIR + NETWORK_DIR_DEDODURO}")
-        sys.exit(1)
-    
+def Show_DedoDuro(excel_file: Path | None = None):
     printGrava(f"Abrindo {excel_file}")
     try:
         result = read_and_filter_dedoduro(excel_file)
@@ -158,18 +155,13 @@ def buscaPBIouTask(itens: set, mensagem: str, buscaPor: str) -> list[str]:
                 num = pbi[1:].strip()
                 itens.add((buscaPor, num))
 
-def Show_PreviaEntregaveis():
+def Show_PreviaEntregaveis(excel_file: Path | None = None):
     global retPBI, retTask
-    excel_file = find_file_more_recent(NETWORK_DIR + NETWORK_DIR_ENTREGAVEIS, FILE_PATTERN_ENTREGAVEIS)
-    if excel_file is None:
-        printGrava(f"No file matching {FILE_PATTERN_ENTREGAVEIS} found in {NETWORK_DIR + NETWORK_DIR_ENTREGAVEIS}")
-        return
 
     printGrava(f"Abrindo {excel_file}")
 
     for sheet in [SHEET_NAME_ENTREGAVEIS_1, SHEET_NAME_ENTREGAVEIS_2]:
         for tipo in ['Pendente:', 'Inválido:']:
-            printGrava(f"Planilha {sheet} - Buscando Épicos {tipo}")
             try:
                 result = read_and_filter_PreviaEntregaveis(excel_file, sheet, tipo)
             except Exception as exc:  # pylint: disable=broad-except
@@ -178,7 +170,8 @@ def Show_PreviaEntregaveis():
             if result.empty:
                 continue
             else:
-                printGrava(f"Encontrados {len(result)} registros:")
+                printGrava(f"Planilha {sheet} - Épico {tipo}")
+                #printGrava(f"Encontrados {len(result)} registros:")
                 # display rows as a table with column names, one record per line
                 printGrava(result.to_string(index=False))
                 for id in result["ID"].tolist():
@@ -232,12 +225,7 @@ def abreRedmine(redmines: set):
         printGrava("- " * 40)
 
 
-def Show_ITAD():
-    excel_file = find_file_more_recent(NETWORK_DIR + NETWORK_DIR_ITAD, FILE_PATTERN_ITAD)
-    if excel_file is None:
-        printGrava(f"No file matching {FILE_PATTERN_ITAD} found in {NETWORK_DIR + NETWORK_DIR_ITAD}")
-        sys.exit(1)
-
+def Show_ITAD(excel_file: Path | None = None):
     printGrava(f"Abrindo {excel_file} - {SHEET_NAME_ITAD} - Buscando Não Conformidades para {"DFR." + targetSetor}")
     try:
         result = read_and_filter_ITAD(excel_file)
@@ -278,14 +266,8 @@ def Show_ITAD():
             for line in outrasMensagens:
                 printGrava(f"   {line}")
 
-def Show_RPM():
+def Show_RPM(pdf_path: Path | None = None):
     """Lê e processa o PDF de inconsistências RPM por setor."""
-    pdf_path = find_file_more_recent(NETWORK_DIR + NETWORK_DIR_RPM, FILE_PATTERN_RPM)
-    
-    if not Path(pdf_path).exists():
-        printGrava(f"Arquivo PDF não encontrado: {pdf_path}")
-        return
-    
     printGrava(f"Abrindo {pdf_path}")
 
     try:
@@ -334,6 +316,12 @@ def BuscaResponsavel(url: string) -> string:
 def main():
     global targetSetor
 
+    excel_file_dedoduro = find_file_more_recent(NETWORK_DIR + NETWORK_DIR_DEDODURO, FILE_PATTERN_DEDODURO)
+    excel_file_previa = find_file_more_recent(NETWORK_DIR + NETWORK_DIR_ENTREGAVEIS, FILE_PATTERN_ENTREGAVEIS)
+    excel_file_itad = find_file_more_recent(NETWORK_DIR + NETWORK_DIR_ITAD, FILE_PATTERN_ITAD)
+
+    pdf_path_rpm = find_file_more_recent(NETWORK_DIR + NETWORK_DIR_RPM, FILE_PATTERN_RPM)
+
     for busca in ['AR1', 'AR2', 'AR3', 'AR4', 'AR5']:
         targetSetor = busca
         retRedmine.clear()
@@ -344,13 +332,14 @@ def main():
         # Receber parâmetros da chamada do programa para definir o targetSetor
         printGrava(f"Verifica Pendências para o setor {targetSetor}", modo="w")
         printGrava("=" * 80)
-        Show_DedoDuro()
+        Show_RPM(pdf_path_rpm)
         printGrava("=" * 80)
-        Show_PreviaEntregaveis()
+        Show_DedoDuro(excel_file_dedoduro)
         printGrava("=" * 80)
-        Show_RPM()
         printGrava("=" * 80)
-        Show_ITAD()
+        Show_PreviaEntregaveis(excel_file_previa)
+        printGrava("=" * 80)
+        Show_ITAD(excel_file_itad)
         printGrava("=" * 80)
 
         abreRedmine(retRedmine)

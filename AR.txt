@@ -1,0 +1,106 @@
+**Problemas encontrados nos Arquivos \\profs01\documentos\PROCERGS\Relatorios_PPR**
+Gerado em 24/03/2026 13:05:46
+
+___
+**Pendências para o setor AR1**
+
+___
+**Pendências para o setor AR2**
+
+___
+Arquivo \\profs01\documentos\PROCERGS\Relatorios_PPR\Validacao_RPM\2026_03\Previa_de_23-03-2026\InconsistenciasRPM_Setores.pdf
+
+___
+Texto da página 4:
+Organização: RPE - PORTAL RECEITA - Desenvolvimento
+Tipo de Organização: Serviço Administração de Produto - Desenvolvimento
+Gerente: Ezequiel Souza Lucas
+Inconsistências
+- e37. Tarefa Resumo/Distribuível não pertence ao modelo.
+Tarefa Resumo com problema: Gerência de Projeto
+
+___
+Arquivo \\profs01\documentos\PROCERGS\Relatorios_PPR\Apropriação de Horas\2026_03\Previa 24-03\DedoDuro_2026324_6228.xlsx
+```
+Divisão Setor  Matricula                          Nome  Normais_PES  Normais_RPM  Normais_Perc  Extras_PES  Extras_RPM  Extras_Perc  BIP_PES  BIP_RPM  BIP_Perc
+    DFR   AR2      57240  DANIEL HENRIQUE C. ARANGUREM       163.38        160.0         97.93       10.70       12.75       119.16   147.58   147.75    100.11
+    DFR   AR2      56549          EZEQUIEL SOUZA LUCAS       163.32        160.0         97.97        4.67         NaN          NaN    66.22    29.00     43.80
+    DFR   AR2      58107 LUIS GUSTAVO AZEVEDO DA SILVA       159.73        160.0        100.17        8.48        8.50       100.20   119.88     7.00      5.84
+```
+Verifique os dados acima. O Percentuais < 90 ou > 110 estão fora do limite.
+==> A correção provável é ajustar as horas no RPM.
+
+___
+Arquivo \\profs01\documentos\PROCERGS\Relatorios_PPR\ITAD\2026-03\Previas\Previa_ITAD_202603_202603230536.xlsx - Não Conformidades - Buscando Não Conformidades para DFR.AR2
+Erro na busca da demanda no Redmine, PBI #1333044, Id Demanda '1329050'.
+
+___
+Pbi #1346777 sem sistema ou incorreto, sigla '' .
+
+___
+
+___
+**Pendências para o setor AR3**
+
+___
+Arquivo \\profs01\documentos\PROCERGS\Relatorios_PPR\Validacao_RPM\2026_03\Previa_de_23-03-2026\InconsistenciasRPM_Setores.pdf
+
+___
+Texto da página 5:
+Projeto: SGC - Nova Política de Parcelamento
+Tipo de Projeto: Projeto
+Gerente: Lucio Jose Silva Filho
+Inconsistências
+- e48. Data de previsão de conclusão do projeto deve ser maior ou igual a data do dia.
+
+___
+Arquivo \\profs01\documentos\PROCERGS\Relatorios_PPR\Apropriação de Horas\2026_03\Previa 24-03\DedoDuro_2026324_6228.xlsx
+```
+Divisão Setor  Matricula                            Nome  Normais_PES  Normais_RPM  Normais_Perc  Extras_PES  Extras_RPM  Extras_Perc  BIP_PES  BIP_RPM  BIP_Perc
+    DFR   AR3      65193 JOSE PHILIPP GUERREIRO DA SILVA       161.93        208.0        128.45        0.00         NaN          NaN    78.90     81.0    102.66
+    DFR   AR3      62927         THIAGO QUADROS MEDEIROS       159.73          4.0          2.50        0.00         NaN          NaN   179.78      NaN       NaN
+    DFR   AR3      58016          VITOR GUGEL DOS SANTOS       160.22        160.0         99.86        3.38         3.5       103.45   153.62    174.0    113.27
+```
+Verifique os dados acima. O Percentuais < 90 ou > 110 estão fora do limite.
+==> A correção provável é ajustar as horas no RPM.
+
+___
+Arquivo \\profs01\documentos\PROCERGS\Relatorios_PPR\Entregaveis\2026-03\Previas\Previa_Entregaveis_2026_03_23_04_19.xlsx
+Planilha DFR - Manutenção - Épico Inválido:
+     ID Divisão Setor TemProject                          Time  Sistema                                      Descrição  Total Horas                              Motivo  Responsavel
+1331690     DFR   AR3    DFR.AR3 Equipe Arrecadação e Cobrança SGA, SAR Genérica - Sprint-1602-1503 equipe Arrecadação          341  - Tasks sem effort work: #1328569.          NaN
+
+___
+**Pendências para o setor AR4**
+
+___
+Arquivo \\profs01\documentos\PROCERGS\Relatorios_PPR\Apropriação de Horas\2026_03\Previa 24-03\DedoDuro_2026324_6228.xlsx
+```
+Divisão Setor  Matricula                      Nome  Normais_PES  Normais_RPM  Normais_Perc  Extras_PES  Extras_RPM  Extras_Perc  BIP_PES  BIP_RPM  BIP_Perc
+    DFR   AR4      65839 CHARLES RAMPELOTTO JUNIOR       160.58        152.5         94.97        29.0        29.0       100.00    30.92     36.0    116.44
+    DFR   AR4      17533            GERSON FRITSCH       164.03        140.0         85.35         0.0         NaN          NaN     0.00      NaN       NaN
+    DFR   AR4      64345    THIAGO BORGES DE SOUZA       162.27        140.0         86.28         9.2         9.0        97.83   143.85    144.0    100.10
+```
+Verifique os dados acima. O Percentuais < 90 ou > 110 estão fora do limite.
+==> A correção provável é ajustar as horas no RPM.
+
+___
+Arquivo \\profs01\documentos\PROCERGS\Relatorios_PPR\Entregaveis\2026-03\Previas\Previa_Entregaveis_2026_03_23_04_19.xlsx
+Planilha DFR - Projeto - Épico Pendente:
+      ID Divisão Setor TemProject     Time Sistema                         Descrição  Total Horas Alterado TargetDate Aprovado Alteração
+#1333293     DFR   AR4    DFR.AR4 Apuração IBSAPUR 2026 Fev - Mar - APUR - Sprint 10       670.25                 SIM           PENDENTE
+Verifique os dados acima. Os Épicos com status 'PENDENTE' estão aguardando aprovação.
+==> A correção provável é solicitar, no próprio Épico, a aprovação da Chefia, que deve ser citada com @nome.
+
+___
+**Pendências para o setor AR5**
+
+___
+Arquivo \\profs01\documentos\PROCERGS\Relatorios_PPR\Entregaveis\2026-03\Previas\Previa_Entregaveis_2026_03_23_04_19.xlsx
+Planilha DFR - Manutenção - Épico Pendente:
+      ID Divisão Setor TemProject                Time     Sistema                                          Descrição Total Horas Alterado TargetDate Aprovado Alteração
+#1330190     DFR   AR5    DFR.AR5 Equipe Fiscalização DOSSIE, AFI Manutenção e Atendimento - Sprint 2026 - Fev - Mar      342.75                 SIM           PENDENTE
+Verifique os dados acima. Os Épicos com status 'PENDENTE' estão aguardando aprovação.
+==> A correção provável é solicitar, no próprio Épico, a aprovação da Chefia, que deve ser citada com @nome.
+
+___

@@ -1,11 +1,11 @@
-import os
+# import os
 from pickle import GLOBAL
 import re
 import sys
 from pathlib import Path
-import glob
+# import glob
 # import webbrowser
-import requests
+# import requests
 # from bs4 import BeautifulSoup
 import pandas as pd
 import pdfplumber
@@ -32,9 +32,9 @@ SHEET_NAME_ITAD = "Não Conformidades"
 NETWORK_DIR_RPM = r"\Validacao_RPM"
 FILE_PATTERN_RPM = "InconsistenciasRPM_Setores.pdf"
 
-retTask = set()
-retEpico = set()
-retPBI = set()
+# retTask = set()
+# retEpico = set()
+# retPBI = set()
 retRedmine = set()
 
 def find_file_more_recent(directory: str, pattern: str) -> Path | None:
@@ -106,11 +106,12 @@ def read_and_filter_dedoduro(file_path: Path) -> pd.DataFrame:
 
 def printGrava(texto: str, modo: str = "a"):
     print(texto)
-    with open(f"{targetSetor}.txt", modo, encoding="utf-8") as f:
+    # with open(f"{targetSetor}.txt", modo, encoding="utf-8") as f:
+    #     f.write(texto + "\n")
+    with open(f"AR.txt", modo, encoding="utf-8") as f:
         f.write(texto + "\n")
 
 def Show_DedoDuro(excel_file: Path | None = None):
-    printGrava(f"Abrindo {excel_file}")
     try:
         result = read_and_filter_dedoduro(excel_file)
     except Exception as exc:  # pylint: disable=broad-except        
@@ -119,11 +120,15 @@ def Show_DedoDuro(excel_file: Path | None = None):
     if result.empty:
         return
     else:
-        printGrava(f"Encontrados {len(result)} registros para o setor {targetSetor}:")
+        printGrava(f"Arquivo {excel_file}")
+
+        # printGrava(f"Encontrados {len(result)} registros para o setor {targetSetor}:")
+        printGrava("```")
         printGrava(result.to_string(index=False))
+        printGrava("```")
         printGrava(f"Verifique os dados acima. O Percentuais < {LIMITE_MIN_DEDODURO} ou > {LIMITE_MAX_DEDODURO} estão fora do limite.")
         printGrava(f"==> A correção provável é ajustar as horas no RPM.")
-        printGrava("- " * 40)
+        Separador()
 
     
 def read_and_filter_PreviaEntregaveis(file_path: Path, sheet_name: str, tipo: str) -> pd.DataFrame:
@@ -145,20 +150,20 @@ def read_and_filter_PreviaEntregaveis(file_path: Path, sheet_name: str, tipo: st
     filtered = filtered.drop(columns=["IAP"], errors='ignore')
     return filtered
 
-def buscaPBIouTask(itens: set, mensagem: str, buscaPor: str) -> list[str]:
-    match = re.search(rf'{buscaPor}\s*(.+?)\.', mensagem)
-    if match:        
-        pbis_str = match.group(1).split('.')[0]  # pega a parte antes do próximo ponto, caso haja
-        pbis = [p.strip() for p in pbis_str.split(',')]
-        for pbi in pbis:
-            if pbi.startswith('#'):
-                num = pbi[1:].strip()
-                itens.add((buscaPor, num))
+# def buscaPBIouTask(itens: set, mensagem: str, buscaPor: str) -> list[str]:
+#     match = re.search(rf'{buscaPor}\s*(.+?)\.', mensagem)
+#     if match:        
+#         pbis_str = match.group(1).split('.')[0]  # pega a parte antes do próximo ponto, caso haja
+#         pbis = [p.strip() for p in pbis_str.split(',')]
+#         for pbi in pbis:
+#             if pbi.startswith('#'):
+#                 num = pbi[1:].strip()
+#                 itens.add((buscaPor, num))
 
 def Show_PreviaEntregaveis(excel_file: Path | None = None):
-    global retPBI, retTask
+    # global retPBI, retTask
 
-    printGrava(f"Abrindo {excel_file}")
+    MostraArquivo = True
 
     for sheet in [SHEET_NAME_ENTREGAVEIS_1, SHEET_NAME_ENTREGAVEIS_2]:
         for tipo in ['Pendente:', 'Inválido:']:
@@ -170,25 +175,34 @@ def Show_PreviaEntregaveis(excel_file: Path | None = None):
             if result.empty:
                 continue
             else:
+                if MostraArquivo:
+                    MostraArquivo = False
+                    printGrava(f"Arquivo {excel_file}")
                 printGrava(f"Planilha {sheet} - Épico {tipo}")
                 #printGrava(f"Encontrados {len(result)} registros:")
                 # display rows as a table with column names, one record per line
-                printGrava(result.to_string(index=False))
-                for id in result["ID"].tolist():
-                    retEpico.add((tipo, id))
                 if tipo == 'Pendente:':
+                    # Altera result para a coluna ID ser o conteúdo atual começando com o símbolo #
+                    result["ID"] = result["ID"].astype(str).apply(lambda x: f"#{x}" if not x.startswith("#") else x)                  
+
+                printGrava(result.to_string(index=False))
+
+                if tipo == 'Pendente:':
+                    # for id in result["ID"].tolist():
+                    #     retEpico.add((tipo, id))
                     printGrava(f"Verifique os dados acima. Os Épicos com status 'PENDENTE' estão aguardando aprovação.")
                     printGrava(f"==> A correção provável é solicitar, no próprio Épico, a aprovação da Chefia, que deve ser citada com @nome.")
                 else: # tipo == "Inválido"                
-                    motivo = result["Motivo"].tolist()
-                    for m in motivo:
-                        buscaPBIouTask(retPBI, m, "Épico com filhos não concluídos:")
-                        buscaPBIouTask(retPBI, m, "Épico com filhos sem iteração ou iteração não selecionada no time:") 
-                        buscaPBIouTask(retTask, m, "Tasks sem effort work:")
-            printGrava("- " * 40)
+                    pass
+                    # motivo = result["Motivo"].tolist()
+                    # for m in motivo:
+                    #     buscaPBIouTask(retPBI, m, "Épico com filhos não concluídos:")
+                    #     buscaPBIouTask(retPBI, m, "Épico com filhos sem iteração ou iteração não selecionada no time:") 
+                    #     buscaPBIouTask(retTask, m, "Tasks sem effort work:")
+            Separador()
 
-    tasks = {t[1] for t in retTask}
-    retPBI = {t for t in retPBI if t[1] not in tasks}
+    # tasks = {t[1] for t in retTask}
+    # retPBI = {t for t in retPBI if t[1] not in tasks}
 
 def read_and_filter_ITAD(file_path: Path) -> pd.DataFrame:
     if not file_path.exists():
@@ -205,15 +219,15 @@ def buscaPBI(mensagem: str) -> str | None:
         return match.group(1)
     return None
 
-def abreSite(pbis: set, caption: string):
-    if pbis:
-        printGrava(f"{caption} com problema:")
+# def abreSite(pbis: set, caption: string):
+#     if pbis:
+#         printGrava(f"{caption} com problema:")
 
-        for pbi in pbis:
-            url = f"https://dev.azure.com/Procergs/DFR.{targetSetor}/_workitems/edit/{pbi[1]}/"
-            printGrava(f"{url}     - {pbi[0][:-1]}  " +  BuscaResponsavel(url)) 
-            # webbrowser.open(url)
-        printGrava("- " * 40)
+#         for pbi in pbis:
+#             url = f"https://dev.azure.com/Procergs/DFR.{targetSetor}/_workitems/edit/{pbi[1]}/"
+#             printGrava(f"{url}     - {pbi[0][:-1]}  " +  BuscaResponsavel(url)) 
+#             # webbrowser.open(url)
+#         Separador()
 
 def abreRedmine(redmines: set):
     if redmines:
@@ -222,11 +236,10 @@ def abreRedmine(redmines: set):
             url = f"https://redmine.intra.rs.gov.br/issues/{redmine}"
             printGrava(url)
             # webbrowser.open(url)
-        printGrava("- " * 40)
-
+        Separador()
 
 def Show_ITAD(excel_file: Path | None = None):
-    printGrava(f"Abrindo {excel_file} - {SHEET_NAME_ITAD} - Buscando Não Conformidades para {"DFR." + targetSetor}")
+    MostraArquivo = True
     try:
         result = read_and_filter_ITAD(excel_file)
     except Exception as exc:  # pylint: disable=broad-except
@@ -238,80 +251,94 @@ def Show_ITAD(excel_file: Path | None = None):
         # Cria variável como SET para evitar duplicidade de Redmine, e lista para os demais casos
         outrasMensagens = set()
         for line in result.itertuples(index=False):
+            if MostraArquivo:
+                MostraArquivo = False
+                printGrava(f"Arquivo {excel_file} - {SHEET_NAME_ITAD} - Buscando Não Conformidades para {"DFR." + targetSetor}")
+
             printGrava(line.Mensagem)
-            printGrava("- " * 40)
-            if "Task sem esforço" in line.Mensagem:
-                retTask.add(f"{(line.Mensagem[1:8])}")
-            elif "Demanda em situação de Rascunho" in line.Mensagem:
+            Separador()
+            if "Demanda em situação de Rascunho" in line.Mensagem:
                 #busca o número do Épico, considerando que o formato é "[WorkItemId=12345]"
-                match = re.search(r'\[WorkItemId=(\d+)\]', line.Mensagem)
-                if match:
-                    retPBI.add(('Redmine está como "Rascunho":', match.group(1)))
+                # match = re.search(r'\[WorkItemId=(\d+)\]', line.Mensagem)
+                # if match:
+                #     retPBI.add(('Redmine está como "Rascunho":', match.group(1)))
 
                 #busca o número do Redmine, considerando que o formato é "[DemandaId=12345]"                
                 match = re.search(r'\[DemandaId=(\d+)\]', line.Mensagem)
                 if match:
                     retRedmine.add(match.group(1))
-            elif "Erro na busca da demanda no Redmine" in line.Mensagem:
-                retPBI.add(('Redmine com Erro:', buscaPBI(line.Mensagem)))
-            elif "sem sistema ou incorreto" in line.Mensagem:
-                retPBI.add(('Redmine vazio ou incorreto:', buscaPBI(line.Mensagem)))
-            elif "PBI com multipla referência a Entregável" in line.Mensagem:
-                retPBI.add(('Multipla Referência a Entregável:', buscaPBI(line.Mensagem)))
-            else:
-                outrasMensagens.add(f"{line.Mensagem}")
+            # elif "Task sem esforço" in line.Mensagem:
+            #     pass #retTask.add(f"{(line.Mensagem[1:8])}")
+            # elif "Erro na busca da demanda no Redmine" in line.Mensagem:
+                #retPBI.add(('Redmine com Erro:', buscaPBI(line.Mensagem)))
+            # elif "sem sistema ou incorreto" in line.Mensagem:
+                #retPBI.add(('Redmine vazio ou incorreto:', buscaPBI(line.Mensagem)))
+            # elif "PBI com multipla referência a Entregável" in line.Mensagem:
+                # retPBI.add(('Multipla Referência a Entregável:', buscaPBI(line.Mensagem)))
+            # else:
+            #     outrasMensagens.add(f"{line.Mensagem}")
 
-        if outrasMensagens:
-            printGrava(f"Mensagens Não Tratadas pela rotina:")
-            for line in outrasMensagens:
-                printGrava(f"   {line}")
+        # if outrasMensagens:
+        #     printGrava(f"Mensagens Não Tratadas pela rotina:")
+        #     for line in outrasMensagens:
+        #         printGrava(f"   {line}")
+    
+    if not MostraArquivo: # Se apresentou erro
+        Separador()
 
 def Show_RPM(pdf_path: Path | None = None):
     """Lê e processa o PDF de inconsistências RPM por setor."""
-    printGrava(f"Abrindo {pdf_path}")
+    MostraArquivo = True
 
     try:
         with pdfplumber.open(pdf_path) as pdf:
             for page in pdf.pages:
                 text = page.extract_text()
                 if targetSetor in text:
-                    printGrava("=" * 80)
+                    if MostraArquivo:
+                        MostraArquivo = False
+                        printGrava(f"Arquivo {pdf_path}")
+                    Separador()
                     printGrava(f"Texto da página {page.page_number}:")  
                     for line in text.splitlines()[3:-1]: # Ignora as linhas iniciais e a última linha que contém o rodapé
                         printGrava(f"{line}")
-                    printGrava("- " * 40)
+                    Separador()
     except Exception as exc:
         printGrava(f"Erro ao processar PDF: {exc}")
 
-def BuscaResponsavel(url: string) -> string:
-    # Mova esse Token para um arquivo seguro, e carregar aqui para uso
-    try:
-        with open("token.txt", "r", encoding="utf-8") as f:
-            ACCESS_TOKEN = f.read().strip()
-    except FileNotFoundError:
-        printGrava("Erro: Arquivo 'token.txt' não encontrado")
-        return ""    
-    
-    HEADERS = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
-        "Content-Type": "application/json"
-    }
-    try:
-        # Faz a requisição HTTP
-        response = requests.get(url, headers=HEADERS, timeout=10)
-        response.raise_for_status()  # Lança erro se status != 200
-    except requests.exceptions.RequestException as e:
-        print(f"Erro ao acessar {url}: {e}")
-        return ""
+# def BuscaResponsavel(url: string) -> string:
+#     # Mova esse Token para um arquivo seguro, e carregar aqui para uso
+#     try:
+#         with open("token.txt", "r", encoding="utf-8") as f:
+#             ACCESS_TOKEN = f.read().strip()
+#     except FileNotFoundError:
+#         printGrava("Erro: Arquivo 'token.txt' não encontrado")
+#         return ""    
+   
+#     HEADERS = {
+#         "Authorization": f"Bearer {ACCESS_TOKEN}",
+#         "Content-Type": "application/json"
+#     }
+#     try:
+#         # Faz a requisição HTTP
+#         response = requests.get(url, headers=HEADERS, timeout=10)
+#         response.raise_for_status()  # Lança erro se status != 200
+#     except requests.exceptions.RequestException as e:
+#         print(f"Erro ao acessar {url}: {e}")
+#         return ""
 
-    try:
-        nome = response.text.split('"fields"')[1]
-        nome = nome.split('"distinctDisplayName":"')[1].split('\\')[0]
-        if nome:
-            nome = "(" + nome + ")"
-        return nome
-    except:
-        return ''
+#     try:
+#         nome = response.text.split('"fields"')[1]
+#         nome = nome.split('"distinctDisplayName":"')[1].split('\\')[0]
+#         if nome:
+#             nome = "(" + nome + ")"
+#         return nome
+#     except:
+#         return ''
+
+def Separador():
+    printGrava("")
+    printGrava("_" * 3)
 
 def main():
     global targetSetor
@@ -322,30 +349,30 @@ def main():
 
     pdf_path_rpm = find_file_more_recent(NETWORK_DIR + NETWORK_DIR_RPM, FILE_PATTERN_RPM)
 
+    printGrava(f"**Problemas encontrados nos Arquivos {NETWORK_DIR}**", modo="w")
+    printGrava(f"Gerado em {pd.Timestamp.now().strftime("%d/%m/%Y %H:%M:%S")}")
+    
+    Separador()
+
     for busca in ['AR1', 'AR2', 'AR3', 'AR4', 'AR5']:
         targetSetor = busca
         retRedmine.clear()
-        retPBI.clear()
-        retTask.clear() 
-        retEpico.clear()
+        # retPBI.clear()
+        # retTask.clear() 
+        # retEpico.clear()
         
         # Receber parâmetros da chamada do programa para definir o targetSetor
-        printGrava(f"Verifica Pendências para o setor {targetSetor}", modo="w")
-        printGrava("=" * 80)
+        printGrava(f"**Pendências para o setor {targetSetor}**")
+        Separador()
         Show_RPM(pdf_path_rpm)
-        printGrava("=" * 80)
         Show_DedoDuro(excel_file_dedoduro)
-        printGrava("=" * 80)
-        printGrava("=" * 80)
         Show_PreviaEntregaveis(excel_file_previa)
-        printGrava("=" * 80)
         Show_ITAD(excel_file_itad)
-        printGrava("=" * 80)
 
         abreRedmine(retRedmine)
-        abreSite(retEpico, "Épicos")
-        abreSite(retPBI, "PBIs")
-        abreSite(retTask, "Tasks")
+        # abreSite(retEpico, "Épicos")
+        # abreSite(retPBI, "PBIs")
+        # abreSite(retTask, "Tasks")
 
     print(f"Arquivos gerados: <Setor>.txt")
 

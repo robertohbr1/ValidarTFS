@@ -1,14 +1,9 @@
-# import os
 import os
 from pickle import GLOBAL
 import re
 import subprocess
 import sys
 from pathlib import Path
-# import glob
-# import webbrowser
-# import requests
-# from bs4 import BeautifulSoup
 import pandas as pd
 import pdfplumber
 import shutil
@@ -35,9 +30,6 @@ SHEET_NAME_ITAD = "Não Conformidades"
 NETWORK_DIR_RPM = r"\Validacao_RPM"
 FILE_PATTERN_RPM = "InconsistenciasRPM_Setores.pdf"
 
-# retTask = set()
-# retEpico = set()
-# retPBI = set()
 retRedmine = set()
 
 def find_file_more_recent(directory: str, pattern: str) -> Path | None:
@@ -72,8 +64,6 @@ def read_and_filter_dedoduro(file_path: Path) -> pd.DataFrame:
 
     # read the specified sheet into a DataFrame, then filter by the "Setor" column. Column names start in line 5, so we skip the first 4 rows
     df = pd.read_excel(file_path, sheet_name=SHEET_NAME_DEDODURO, header=4)
-    # if df.iloc[3, 1] != "Setor":
-    #     raise KeyError("'Setor' not found in expected position (row 4, column 2)")
     df.rename(columns={df.columns[0]: "Divisão"}, inplace=True)
     df.rename(columns={df.columns[1]: "Setor"}, inplace=True)
     df.rename(columns={df.columns[2]: "Matricula"}, inplace=True)
@@ -109,8 +99,6 @@ def read_and_filter_dedoduro(file_path: Path) -> pd.DataFrame:
 
 def printGrava(texto: str, modo: str = "a"):
     print(texto)
-    # with open(f"{targetSetor}.txt", modo, encoding="utf-8") as f:
-    #     f.write(texto + "\n")
     with open(f"AR.txt", modo, encoding="utf-8") as f:
         f.write(texto + "\n")
 
@@ -125,7 +113,6 @@ def Show_DedoDuro(excel_file: Path | None = None):
     else:
         printGrava(f"Arquivo {excel_file}")
 
-        # printGrava(f"Encontrados {len(result)} registros para o setor {targetSetor}:")
         printGrava("```")
         printGrava(result.to_string(index=False))
         printGrava("```")
@@ -153,19 +140,7 @@ def read_and_filter_PreviaEntregaveis(file_path: Path, sheet_name: str, tipo: st
     filtered = filtered.drop(columns=["IAP"], errors='ignore')
     return filtered
 
-# def buscaPBIouTask(itens: set, mensagem: str, buscaPor: str) -> list[str]:
-#     match = re.search(rf'{buscaPor}\s*(.+?)\.', mensagem)
-#     if match:        
-#         pbis_str = match.group(1).split('.')[0]  # pega a parte antes do próximo ponto, caso haja
-#         pbis = [p.strip() for p in pbis_str.split(',')]
-#         for pbi in pbis:
-#             if pbi.startswith('#'):
-#                 num = pbi[1:].strip()
-#                 itens.add((buscaPor, num))
-
 def Show_PreviaEntregaveis(excel_file: Path | None = None):
-    # global retPBI, retTask
-
     MostraArquivo = True
 
     for sheet in [SHEET_NAME_ENTREGAVEIS_1, SHEET_NAME_ENTREGAVEIS_2]:
@@ -182,8 +157,7 @@ def Show_PreviaEntregaveis(excel_file: Path | None = None):
                     MostraArquivo = False
                     printGrava(f"Arquivo {excel_file}")
                 printGrava(f"Planilha {sheet} - Épico {tipo}")
-                #printGrava(f"Encontrados {len(result)} registros:")
-                # display rows as a table with column names, one record per line
+
                 if tipo == 'Pendente:':
                     # Altera result para a coluna ID ser o conteúdo atual começando com o símbolo #
                     result["ID"] = result["ID"].astype(str).apply(lambda x: f"#{x}" if not x.startswith("#") else x)                  
@@ -191,21 +165,12 @@ def Show_PreviaEntregaveis(excel_file: Path | None = None):
                 printGrava(result.to_string(index=False))
 
                 if tipo == 'Pendente:':
-                    # for id in result["ID"].tolist():
-                    #     retEpico.add((tipo, id))
                     printGrava(f"Verifique os dados acima. Os Épicos com status 'PENDENTE' estão aguardando aprovação.")
                     printGrava(f"==> A correção provável é solicitar, no próprio Épico, a aprovação da Chefia, que deve ser citada com @nome.")
                 else: # tipo == "Inválido"                
                     pass
-                    # motivo = result["Motivo"].tolist()
-                    # for m in motivo:
-                    #     buscaPBIouTask(retPBI, m, "Épico com filhos não concluídos:")
-                    #     buscaPBIouTask(retPBI, m, "Épico com filhos sem iteração ou iteração não selecionada no time:") 
-                    #     buscaPBIouTask(retTask, m, "Tasks sem effort work:")
-            Separador()
 
-    # tasks = {t[1] for t in retTask}
-    # retPBI = {t for t in retPBI if t[1] not in tasks}
+            Separador()
 
 def read_and_filter_ITAD(file_path: Path) -> pd.DataFrame:
     if not file_path.exists():
@@ -215,22 +180,6 @@ def read_and_filter_ITAD(file_path: Path) -> pd.DataFrame:
     filtered = df[df["TeamProject"] == "DFR." + targetSetor]
 
     return filtered
-
-def buscaPBI(mensagem: str) -> str | None:
-    match = re.search(r'#(\d+)', mensagem)
-    if match:
-        return match.group(1)
-    return None
-
-# def abreSite(pbis: set, caption: string):
-#     if pbis:
-#         printGrava(f"{caption} com problema:")
-
-#         for pbi in pbis:
-#             url = f"https://dev.azure.com/Procergs/DFR.{targetSetor}/_workitems/edit/{pbi[1]}/"
-#             printGrava(f"{url}     - {pbi[0][:-1]}  " +  BuscaResponsavel(url)) 
-#             # webbrowser.open(url)
-#         Separador()
 
 def abreRedmine(redmines: set):
     if redmines:
@@ -252,7 +201,6 @@ def Show_ITAD(excel_file: Path | None = None):
         return
     else:
         # Cria variável como SET para evitar duplicidade de Redmine, e lista para os demais casos
-        outrasMensagens = set()
         for line in result.itertuples(index=False):
             if MostraArquivo:
                 MostraArquivo = False
@@ -261,30 +209,10 @@ def Show_ITAD(excel_file: Path | None = None):
             printGrava(line.Mensagem)
             Separador()
             if "Demanda em situação de Rascunho" in line.Mensagem:
-                #busca o número do Épico, considerando que o formato é "[WorkItemId=12345]"
-                # match = re.search(r'\[WorkItemId=(\d+)\]', line.Mensagem)
-                # if match:
-                #     retPBI.add(('Redmine está como "Rascunho":', match.group(1)))
-
                 #busca o número do Redmine, considerando que o formato é "[DemandaId=12345]"                
                 match = re.search(r'\[DemandaId=(\d+)\]', line.Mensagem)
                 if match:
                     retRedmine.add(match.group(1))
-            # elif "Task sem esforço" in line.Mensagem:
-            #     pass #retTask.add(f"{(line.Mensagem[1:8])}")
-            # elif "Erro na busca da demanda no Redmine" in line.Mensagem:
-                #retPBI.add(('Redmine com Erro:', buscaPBI(line.Mensagem)))
-            # elif "sem sistema ou incorreto" in line.Mensagem:
-                #retPBI.add(('Redmine vazio ou incorreto:', buscaPBI(line.Mensagem)))
-            # elif "PBI com multipla referência a Entregável" in line.Mensagem:
-                # retPBI.add(('Multipla Referência a Entregável:', buscaPBI(line.Mensagem)))
-            # else:
-            #     outrasMensagens.add(f"{line.Mensagem}")
-
-        # if outrasMensagens:
-        #     printGrava(f"Mensagens Não Tratadas pela rotina:")
-        #     for line in outrasMensagens:
-        #         printGrava(f"   {line}")
     
     if not MostraArquivo: # Se apresentou erro
         Separador()
@@ -309,35 +237,6 @@ def Show_RPM(pdf_path: Path | None = None):
     except Exception as exc:
         printGrava(f"Erro ao processar PDF: {exc}")
 
-# def BuscaResponsavel(url: string) -> string:
-#     # Mova esse Token para um arquivo seguro, e carregar aqui para uso
-#     try:
-#         with open("token.txt", "r", encoding="utf-8") as f:
-#             ACCESS_TOKEN = f.read().strip()
-#     except FileNotFoundError:
-#         printGrava("Erro: Arquivo 'token.txt' não encontrado")
-#         return ""    
-   
-#     HEADERS = {
-#         "Authorization": f"Bearer {ACCESS_TOKEN}",
-#         "Content-Type": "application/json"
-#     }
-#     try:
-#         # Faz a requisição HTTP
-#         response = requests.get(url, headers=HEADERS, timeout=10)
-#         response.raise_for_status()  # Lança erro se status != 200
-#     except requests.exceptions.RequestException as e:
-#         print(f"Erro ao acessar {url}: {e}")
-#         return ""
-
-#     try:
-#         nome = response.text.split('"fields"')[1]
-#         nome = nome.split('"distinctDisplayName":"')[1].split('\\')[0]
-#         if nome:
-#             nome = "(" + nome + ")"
-#         return nome
-#     except:
-#         return ''
 
 def Separador():
     printGrava("")
@@ -360,9 +259,6 @@ def main():
     for busca in ['AR1', 'AR2', 'AR3', 'AR4', 'AR5']:
         targetSetor = busca
         retRedmine.clear()
-        # retPBI.clear()
-        # retTask.clear() 
-        # retEpico.clear()
         
         # Receber parâmetros da chamada do programa para definir o targetSetor
         printGrava(f"**Pendências para o setor {targetSetor}**")
@@ -373,9 +269,6 @@ def main():
         Show_ITAD(excel_file_itad)
 
         abreRedmine(retRedmine)
-        # abreSite(retEpico, "Épicos")
-        # abreSite(retPBI, "PBIs")
-        # abreSite(retTask, "Tasks")
 
     print(f"Arquivos gerados: AR.txt")
 

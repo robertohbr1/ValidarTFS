@@ -9,6 +9,6 @@ filtering records by a specific sector value.
    the project wheel/installer.
 2. Run the script with python main.py.
 3. The code searches for the first file matching DedoDuro*.xlsx in the\
-   \\profs01\\documentos\\PROCERGS\\Relatorios_PPR\\Apropriação de Horas directory and opens the\
+   \\profs01\\documentos\\PROCERGS\\Relatorios_PPR\\Apropriaï¿½ï¿½o de Horas directory and opens the\
    worksheet named H.Apropriadas X H.Ponto - Setor.
-4. Rows where the Setor column equals AR1 are printed to the console.
+4. Rows where the Setor column equals AR1, AR2, AR3, AR4 and AR5 are printed to the console.

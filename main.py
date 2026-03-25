@@ -14,8 +14,8 @@ NETWORK_DIR = r"\\profs01\documentos\PROCERGS\Relatorios_PPR"
 NETWORK_DIR_DEDODURO = r"\Apropriação de Horas"
 FILE_PATTERN_DEDODURO = "DedoDuro*.xlsx"
 SHEET_NAME_DEDODURO = "H.Apropriadas X H.Ponto - Setor"
-LIMITE_MIN_DEDODURO = 90
-LIMITE_MAX_DEDODURO = 110
+LIMITE_MIN_DEDODURO = 99
+LIMITE_MAX_DEDODURO = 101
 
 NETWORK_DIR_ENTREGAVEIS = r"\Entregaveis"
 FILE_PATTERN_ENTREGAVEIS = "Previa_Entregaveis*.xlsx"
@@ -58,7 +58,7 @@ def find_file_more_recent(directory: str, pattern: str) -> Path | None:
     return newest
 
 
-def read_and_filter_dedoduro(file_path: Path) -> pd.DataFrame:
+def read_and_filter_dedoduro(file_path: Path, coluna: int) -> pd.DataFrame:
     if not file_path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
 
@@ -69,33 +69,44 @@ def read_and_filter_dedoduro(file_path: Path) -> pd.DataFrame:
     df.rename(columns={df.columns[2]: "Matricula"}, inplace=True)
     df.rename(columns={df.columns[3]: "Nome"}, inplace=True)
 
-    df.rename(columns={df.columns[4]: "Normais_PES"}, inplace=True)
-    df.rename(columns={df.columns[5]: "Normais_RPM"}, inplace=True)
-    df.rename(columns={df.columns[6]: "Normais_Perc"}, inplace=True)
+    df = df[df["Setor"] == targetSetor]
+    if coluna == 1:
+        df.rename(columns={df.columns[4]: "Normais_PES"}, inplace=True)
+        df.rename(columns={df.columns[5]: "Normais_RPM"}, inplace=True)
+        df.rename(columns={df.columns[6]: "Normais_Perc"}, inplace=True)
+        df = df.drop(df.columns[7:13], axis=1)
 
-    df.rename(columns={df.columns[7]: "Extras_PES"}, inplace=True)
-    df.rename(columns={df.columns[8]: "Extras_RPM"}, inplace=True)
-    df.rename(columns={df.columns[9]: "Extras_Perc"}, inplace=True)
+        df = df[(df["Normais_Perc"] <= LIMITE_MIN_DEDODURO) | (df["Normais_Perc"] >= LIMITE_MAX_DEDODURO)]
+       
+        df["Normais_PES"] = df["Normais_PES"].round(2)
+        df["Normais_RPM"] = df["Normais_RPM"].round(2)
+        df["Normais_Perc"] = df["Normais_Perc"].round(2)
 
-    df.rename(columns={df.columns[10]: "BIP_PES"}, inplace=True)
-    df.rename(columns={df.columns[11]: "BIP_RPM"}, inplace=True)
-    df.rename(columns={df.columns[12]: "BIP_Perc"}, inplace=True)
+    elif coluna == 2:
+        df.rename(columns={df.columns[7]: "Extras_PES"}, inplace=True)
+        df.rename(columns={df.columns[8]: "Extras_RPM"}, inplace=True)
+        df.rename(columns={df.columns[9]: "Extras_Perc"}, inplace=True)
+        df = df.drop(df.columns[10:13], axis=1)
+        df = df.drop(df.columns[4:7], axis=1)
 
-    filtered = df[df["Setor"] == targetSetor]
-    filtered = filtered[((filtered["Normais_Perc"].notna()) & ((filtered["Normais_Perc"] <= LIMITE_MIN_DEDODURO) | (filtered["Normais_Perc"] >= LIMITE_MAX_DEDODURO)))
-        | ((filtered["Extras_Perc"].notna()) & ((filtered["Extras_Perc"] <= LIMITE_MIN_DEDODURO) | (filtered["Extras_Perc"] >= LIMITE_MAX_DEDODURO))) 
-        | ((filtered["BIP_Perc"].notna()) & ((filtered["BIP_Perc"] <= LIMITE_MIN_DEDODURO) | (filtered["BIP_Perc"] >= LIMITE_MAX_DEDODURO)))]
-    
-    filtered["Normais_PES"] = filtered["Normais_PES"].round(2)
-    filtered["Normais_RPM"] = filtered["Normais_RPM"].round(2)
-    filtered["Normais_Perc"] = filtered["Normais_Perc"].round(2)
-    filtered["Extras_PES"] = filtered["Extras_PES"].round(2)
-    filtered["Extras_RPM"] = filtered["Extras_RPM"].round(2)
-    filtered["Extras_Perc"] = filtered["Extras_Perc"].round(2)
-    filtered["BIP_PES"] = filtered["BIP_PES"].round(2)  
-    filtered["BIP_RPM"] = filtered["BIP_RPM"].round(2)
-    filtered["BIP_Perc"] = filtered["BIP_Perc"].round(2)
-    return filtered
+        df = df[(df["Extras_Perc"] <= LIMITE_MIN_DEDODURO) | (df["Extras_Perc"] >= LIMITE_MAX_DEDODURO)]
+        
+        df["Extras_PES"] = df["Extras_PES"].round(2)
+        df["Extras_RPM"] = df["Extras_RPM"].round(2)
+        df["Extras_Perc"] = df["Extras_Perc"].round(2)
+    elif coluna == 3:
+        df.rename(columns={df.columns[10]: "BIP_PES"}, inplace=True)
+        df.rename(columns={df.columns[11]: "BIP_RPM"}, inplace=True)
+        df.rename(columns={df.columns[12]: "BIP_Perc"}, inplace=True)
+        df = df.drop(df.columns[4:10], axis=1)
+
+        df = df[(df["BIP_Perc"] <= LIMITE_MIN_DEDODURO) | (df["BIP_Perc"] >= LIMITE_MAX_DEDODURO)]
+        
+        df["BIP_PES"] = df["BIP_PES"].round(2)  
+        df["BIP_RPM"] = df["BIP_RPM"].round(2)
+        df["BIP_Perc"] = df["BIP_Perc"].round(2)
+
+    return df
 
 def printGrava(texto: str, modo: str = "a"):
     print(texto)
@@ -103,19 +114,24 @@ def printGrava(texto: str, modo: str = "a"):
         f.write(texto + "\n")
 
 def Show_DedoDuro(excel_file: Path | None = None):
-    try:
-        result = read_and_filter_dedoduro(excel_file)
-    except Exception as exc:  # pylint: disable=broad-except        
-        return
-    
-    if result.empty:
-        return
-    else:
-        printGrava(f"Arquivo {excel_file}")
+    MostraArquivo = True
 
-        printGrava("```")
-        printGrava(result.to_string(index=False))
-        printGrava("```")
+    for x in [1, 2, 3]:
+        try:
+            result = read_and_filter_dedoduro(excel_file, x)
+        except Exception as exc:  # pylint: disable=broad-except        
+            return
+        
+        if not result.empty:
+            if MostraArquivo:
+                MostraArquivo = False
+                printGrava(f"Arquivo {excel_file}")
+
+            printGrava("```")
+            printGrava(result.to_string(index=False))
+            printGrava("```")
+
+    if not MostraArquivo:
         printGrava(f"Verifique os dados acima. O Percentuais < {LIMITE_MIN_DEDODURO} ou > {LIMITE_MAX_DEDODURO} estão fora do limite.")
         printGrava(f"==> A correção provável é ajustar as horas no RPM.")
         Separador()
@@ -242,6 +258,24 @@ def Separador():
     printGrava("")
     printGrava("_" * 3)
 
+def atualizaWiki():
+    destino = r"C:\Users\rb65847\Source\repos\DFR.AR1.wiki"
+    arquivo_destino = destino + r"\DFR.AR1\Relatório-TFS%2DPES%2DRPM.md"
+    shutil.copy("AR.txt", arquivo_destino)
+
+
+
+    os.chdir(destino) 
+    subprocess.run(["git", "pull"], check=True)
+    subprocess.run(["git", "add", "*"], check=True)
+
+    data_atual = pd.Timestamp.now().strftime("%d-%m-%Y")
+    mensagem = f"Atualizado em {data_atual}"
+    subprocess.run(["git", "commit", "-m", mensagem], check=True)
+
+    subprocess.run(["git", "push"], check=True)
+
+
 def main():
     global targetSetor
 
@@ -272,19 +306,7 @@ def main():
 
     print(f"Arquivos gerados: AR.txt")
 
-    destino = r"C:\Users\rb65847\Source\repos\DFR.AR1.wiki"
-    arquivo_destino = destino + r"\DFR.AR1\Relatório-TFS%2DPES%2DRPM.md"
-    shutil.copy("AR.txt", arquivo_destino)
-
-    os.chdir(destino) 
-    subprocess.run(["git", "pull"], check=True)
-    subprocess.run(["git", "add", "*"], check=True)
-
-    data_atual = pd.Timestamp.now().strftime("%d-%m-%Y")
-    mensagem = f"Atualizado em {data_atual}"
-    subprocess.run(["git", "commit", "-m", mensagem], check=True)
-
-    subprocess.run(["git", "push"], check=True)
+    atualizaWiki()
 
 if __name__ == "__main__":
     main()

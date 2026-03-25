@@ -1,6 +1,8 @@
 # import os
+import os
 from pickle import GLOBAL
 import re
+import subprocess
 import sys
 from pathlib import Path
 # import glob
@@ -9,6 +11,7 @@ from pathlib import Path
 # from bs4 import BeautifulSoup
 import pandas as pd
 import pdfplumber
+import shutil
 
 targetSetor = "AR1"
 
@@ -374,7 +377,21 @@ def main():
         # abreSite(retPBI, "PBIs")
         # abreSite(retTask, "Tasks")
 
-    print(f"Arquivos gerados: <Setor>.txt")
+    print(f"Arquivos gerados: AR.txt")
+
+    destino = r"C:\Users\rb65847\Source\repos\DFR.AR1.wiki"
+    arquivo_destino = destino + r"\DFR.AR1\Relatório-TFS%2DPES%2DRPM.md"
+    shutil.copy("AR.txt", arquivo_destino)
+
+    os.chdir(destino) 
+    subprocess.run(["git", "pull"], check=True)
+    subprocess.run(["git", "add", "*"], check=True)
+
+    data_atual = pd.Timestamp.now().strftime("%d-%m-%Y")
+    mensagem = f"Atualizado em {data_atual}"
+    subprocess.run(["git", "commit", "-m", mensagem], check=True)
+
+    subprocess.run(["git", "push"], check=True)
 
 if __name__ == "__main__":
     main()
